@@ -1,63 +1,46 @@
-import requests
-import csv
-from bs4 import BeautifulSoup
-import time
-import random
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
-class LinkedInScraper:
+def login_to_linkedin(driver, email, password):
+    try:
+        # Navigate to the LinkedIn login page
+        driver.get("https://www.linkedin.com/login")
+        
+        # Enter email and password
+        email_field = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "username")))
+        email_field.send_keys(email)
+        
+        password_field = driver.find_element(By.ID, "password")
+        password_field.send_keys(password)
+        
+        # Click sign-in button
+        driver.find_element(By.XPATH, "//button[text()='Sign in']").click()
+        
+        # Wait for login to complete
+        WebDriverWait(driver, 10).until(EC.url_contains("https://www.linkedin.com/feed/"))
+        
+    except Exception as e:
+        print("Error logging in to LinkedIn:", e)
 
-    def __init__(self, email, password):
-        self.email = email
-        self.password = password
-        self.session = requests.Session()
-        self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36"
-        }
+# Configure Chrome options
+options = webdriver.ChromeOptions()
+options.add_argument('--ignore-certificate-errors')
+options.add_argument('--ignore-ssl-errors')
+# options.add_argument('--headless')  # Optional: Run in headless mode to hide browser window
 
-    def login(self):
-        login_url = "https://www.linkedin.com/login"
-        response = self.session.get(login_url, headers=self.headers)
-        soup = BeautifulSoup(response.content, "html.parser")
-        csrf_token = soup.find("input", {"name": "loginCsrfParam"})["value"]
-        data = {
-            "session_key": self.email,
-            "session_password": self.password,
-            "loginCsrfParam": csrf_token
-        }
-        login_attempt = self.session.post(login_url, data=data, headers=self.headers)
-        return login_attempt.status_code == 200
+# Initialize WebDriver
+driver = webdriver.Chrome(options=options)
 
-    def scrape_profiles(self, num_profiles):
-        profiles = []
-        for _ in range(num_profiles):
-            profile_url = "https://www.linkedin.com/in/random-profile"  # Replace with actual profile URL
-            response = self.session.get(profile_url, headers=self.headers)
-            if response.status_code == 200:
-                soup = BeautifulSoup(response.content, "html.parser")
-                name = soup.find("h1", class_="text-heading-xlarge").get_text().strip()
-                email = ""  # Replace with code to extract email
-                company_name = soup.find("a", class_="link-without-visited-state").get_text().strip()
-                phone_number = ""  # Replace with code to extract phone number
-                country = ""  # Replace with code to extract country
-                profiles.append([name, email, company_name, phone_number, country])
-            time.sleep(random.uniform(1, 5))  # Sleep to avoid rate limiting
-        return profiles
+# LinkedIn credentials
+linkedin_email = "demo@gmail.com"
+linkedin_password = "demo"
 
-    def export_to_csv(self, profiles):
-        with open("linkedin_profiles.csv", "w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(["Name", "Email", "Company Name", "Phone Number", "Country"])
-            writer.writerows(profiles)
+# Log in to LinkedIn
+login_to_linkedin(driver, linkedin_email, linkedin_password)
 
-if __name__ == "__main__":
-    linkedin_email = "your_email@example.com"
-    linkedin_password = "your_password"
-    num_profiles_to_scrape = 1000
-    scraper = LinkedInScraper(linkedin_email, linkedin_password)
-    if scraper.login():
-        print("Logged in successfully.")
-        profiles = scraper.scrape_profiles(num_profiles_to_scrape)
-        scraper.export_to_csv(profiles)
-        print(f"Scraped {len(profiles)} profiles and exported data to 'linkedin_profiles.csv'.")
-    else:
-        print("Failed to login. Check your credentials.")
+# Now, you can perform further actions with the logged-in session
+
+# For example, let's print the current URL
+print("Current URL:", driver.current_url)
