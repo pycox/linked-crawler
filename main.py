@@ -24,23 +24,53 @@ def login_to_linkedin(driver, email, password):
     except Exception as e:
         print("Error logging in to LinkedIn:", e)
 
+def extract_profile_urls(driver):
+    profile_urls = set()  # Using a set to store unique URLs
+    # Find all profile elements
+    profile_elements = driver.find_elements(By.XPATH, "//a[contains(@href, '/in/')]")
+    # Filter out the profile URLs ending with "origin=FACETED_SEARCH"
+    for element in profile_elements:
+        href = element.get_attribute("href")
+        if not href.endswith("origin=FACETED_SEARCH"):
+            profile_urls.add(href)
+    return profile_urls
+
 # Configure Chrome options
 options = webdriver.ChromeOptions()
 options.add_argument('--ignore-certificate-errors')
 options.add_argument('--ignore-ssl-errors')
 # options.add_argument('--headless')  # Optional: Run in headless mode to hide browser window
 
-# Initialize WebDriver
+# Initialize WebDriver with implicit wait
 driver = webdriver.Chrome(options=options)
+driver.implicitly_wait(10)  # Wait up to 10 seconds for elements to be located
 
 # LinkedIn credentials
-linkedin_email = "demo@gmail.com"
-linkedin_password = "demo"
+linkedin_email = "bradyalyssa479@gmail.com"
+linkedin_password = "Asdf@1234"
 
 # Log in to LinkedIn
 login_to_linkedin(driver, linkedin_email, linkedin_password)
 
-# Now, you can perform further actions with the logged-in session
+# Define the base URL to start collecting profile URLs from
+base_url = "https://www.linkedin.com/search/results/people/?currentCompany=%5B%228074624%22%5D&origin=FACETED_SEARCH&page={}&sid=aLd"
 
-# For example, let's print the current URL
-print("Current URL:", driver.current_url)
+# Collect profile URLs from all pages
+all_profile_urls = set()  # Using a set to ensure unique URLs
+for page_number in range(1, 101):  # Loop from page 1 to 100
+    # Visit the page
+    page_url = base_url.format(page_number)
+    driver.get(page_url)
+    
+    # Extract profile URLs from the current page
+    profile_urls = extract_profile_urls(driver)
+    # Add the extracted URLs to the set of all profile URLs
+    all_profile_urls.update(profile_urls)
+    print(profile_urls)
+
+# Print collected profile URLs
+for url in all_profile_urls:
+    print(url)
+
+# Close the WebDriver session
+driver.quit()
