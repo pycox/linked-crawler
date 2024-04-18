@@ -46,14 +46,14 @@ driver = webdriver.Chrome(options=options)
 driver.implicitly_wait(10)  # Wait up to 10 seconds for elements to be located
 
 # LinkedIn credentials
-linkedin_email = "bradyalyssa479@gmail.com"
-linkedin_password = "Asdf@1234"
+linkedin_email = "roman777bor@gmail.com"
+linkedin_password = "star040308"
 
 # Log in to LinkedIn
 login_to_linkedin(driver, linkedin_email, linkedin_password)
 
 # Define the base URL to start collecting profile URLs from
-base_url = "https://www.linkedin.com/search/results/people/?currentCompany=%5B%228074624%22%5D&origin=FACETED_SEARCH&page={}&sid=aLd"
+base_url = "https://www.linkedin.com/search/results/people/?geoUrn=%5B%22101282230%22%5D&origin=FACETED_SEARCH&page=2&sid=gp3&titleFreeText=CEO"
 
 # Collect profile URLs from all pages
 all_profile_urls = set()  # Using a set to ensure unique URLs
